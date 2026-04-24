@@ -69,25 +69,11 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (email) => {
-    // Use our Edge Function which calls Supabase Admin + Resend API
-    // This completely bypasses Supabase's broken SMTP
-    try {
-      const res = await fetch(`${EDGE_FN_URL}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          redirectTo: `${window.location.origin}?reset=1`
-        })
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        return { data: null, error: { message: result.error || 'Reset email send nahi hua' } };
-      }
-      return { data: result, error: null };
-    } catch (err) {
-      return { data: null, error: { message: err.message } };
-    }
+    // Use Supabase's native reset — works without custom SMTP or domain
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}?reset=1`
+    });
+    return { data, error };
   };
 
   const updatePassword = async (newPassword) => {
