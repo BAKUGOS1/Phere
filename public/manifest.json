@@ -1,7 +1,7 @@
 {
-  "name": "Phere",
+  "name": "Phere - Smart Wedding Expense Tracker",
   "short_name": "Phere",
-  "description": "Smart Wedding Expense Tracker — Budget, Shagun, Lena-Dena sab ek jagah",
+  "description": "Track kharcha, shagun, lena-dena — Har Rupaya, Har Rishta",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FDF8EE",
@@ -12,6 +12,12 @@
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
