@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const EDGE_FN_URL = `${SUPABASE_URL}/functions/v1`;
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -31,9 +34,24 @@ export function AuthProvider({ children }) {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}`,
         data: { display_name: displayName }
       }
     });
+    // Send welcome email via our Edge Function (doesn't depend on Supabase SMTP)
+    if (!error) {
+      try {
+        await fetch(`${EDGE_FN_URL}/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'welcome',
+            to: email,
+            data: { name: displayName }
+          })
+        });
+      } catch (_) { /* non-critical */ }
+    }
     return { data, error };
   };
 
@@ -51,9 +69,30 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (email) => {
+    // Use Supabase's built-in reset (works with custom SMTP or magic link)
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin
+      redirectTo: `${window.location.origin}?reset=1`
     });
+
+    // Also send a friendly notification via our Edge Function as backup
+    if (!error) {
+      try {
+        await fetch(`${EDGE_FN_URL}/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'reminder',
+            to: email,
+            data: {
+              description: 'Password Reset Requested',
+              vendor: 'Phere Security',
+              amount: '',
+              dueDate: new Date().toLocaleDateString('en-IN')
+            }
+          })
+        });
+      } catch (_) { /* non-critical */ }
+    }
     return { data, error };
   };
 

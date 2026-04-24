@@ -42,7 +42,20 @@ export default function AuthPage() {
         setSuccess('Password reset link bhej diya hai email pe!');
       }
     } catch (err) {
-      setError(err.message || 'Kuch gadbad ho gayi. Try again.');
+      let msg = err.message || 'Kuch gadbad ho gayi. Try again.';
+      // Friendly messages for common Supabase errors
+      if (msg.includes('rate limit') || msg.includes('Rate limit')) {
+        msg = 'Too many emails sent. Please wait 1 hour or check your inbox.';
+      } else if (msg.includes('recovery') || msg.includes('sending')) {
+        msg = 'Email send nahi ho paya. Please login directly — password reset link aapke registered email pe aayega.';
+      } else if (msg.includes('Invalid login credentials')) {
+        msg = 'Email ya password galat hai. Try again.';
+      } else if (msg.includes('Email not confirmed')) {
+        msg = 'Email verify nahi hua. Supabase Dashboard mein \'Confirm email\' band karein.';
+      } else if (msg.includes('User already registered')) {
+        msg = 'Ye email pehle se registered hai. Login karein.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
