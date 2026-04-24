@@ -318,11 +318,11 @@ export default function Phere() {
       <main className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-6">
         <div className="fade-up">
           {tab === 'dashboard' && <Dashboard data={data} setTab={setTab} updateData={updateData} />}
-          {tab === 'expenses' && <Expenses data={data} updateData={updateData} showToast={showToast} />}
-          {tab === 'shagun' && <Shagun data={data} updateData={updateData} showToast={showToast} />}
-          {tab === 'lenadena' && <LenaDena data={data} updateData={updateData} showToast={showToast} />}
-          {tab === 'vendors' && <Vendors data={data} updateData={updateData} showToast={showToast} />}
-          {tab === 'guests' && <Guests data={data} updateData={updateData} showToast={showToast} />}
+          {tab === 'expenses' && <Expenses data={data} updateData={updateData} showToast={showToast} user={user} />}
+          {tab === 'shagun' && <Shagun data={data} updateData={updateData} showToast={showToast} user={user} />}
+          {tab === 'lenadena' && <LenaDena data={data} updateData={updateData} showToast={showToast} user={user} />}
+          {tab === 'vendors' && <Vendors data={data} updateData={updateData} showToast={showToast} user={user} />}
+          {tab === 'guests' && <Guests data={data} updateData={updateData} showToast={showToast} user={user} />}
           {tab === 'ai' && <AIAssistant data={data} updateData={updateData} showToast={showToast} setTab={setTab} />}
           {tab === 'settings' && <SettingsPage data={data} updateData={updateData} showToast={showToast} />}
         </div>
@@ -587,7 +587,7 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 // ============ EXPENSES ============
-function Expenses({ data, updateData, showToast }) {
+function Expenses({ data, updateData, showToast, user }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
@@ -846,7 +846,7 @@ function ExpenseForm({ expense, onSave, onClose }) {
 }
 
 // ============ SHAGUN ============
-function Shagun({ data, updateData, showToast }) {
+function Shagun({ data, updateData, showToast, user }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
@@ -867,10 +867,14 @@ function Shagun({ data, updateData, showToast }) {
     setEditing(null);
   };
 
-  const del = (id) => {
-    if (confirm('Delete karna hai?')) {
+  const del = async (id) => {
+    if (confirm('Delete karna hai? (Trash mein jayega, recover kar sakte ho)')) {
+      const item = data.shagun.find(x => x.id === id);
+      if (item && user) {
+        await moveToTrash(user.id, 'shagun', item);
+      }
       updateData(d => ({ ...d, shagun: d.shagun.filter(x => x.id !== id) }));
-      showToast('Shagun deleted');
+      showToast('Moved to trash');
     }
   };
 
@@ -1029,7 +1033,7 @@ function ShagunForm({ item, onSave, onClose }) {
 }
 
 // ============ LENA-DENA (Receivables & Payables) ============
-function LenaDena({ data, updateData, showToast }) {
+function LenaDena({ data, updateData, showToast, user }) {
   const [subTab, setSubTab] = useState('lena');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -1064,10 +1068,15 @@ function LenaDena({ data, updateData, showToast }) {
     setEditing(null);
   };
 
-  const del = (id) => {
-    if (confirm('Delete karna hai?')) {
+  const del = async (id) => {
+    if (confirm('Delete karna hai? (Trash mein jayega, recover kar sakte ho)')) {
+      const list = data[subTab] || [];
+      const item = list.find(x => x.id === id);
+      if (item && user) {
+        await moveToTrash(user.id, subTab === 'lena' ? 'lena' : 'dena', item);
+      }
       updateData(d => ({ ...d, [subTab]: d[subTab].filter(x => x.id !== id) }));
-      showToast('Deleted');
+      showToast('Moved to trash');
     }
   };
 
@@ -1378,7 +1387,7 @@ function LenaDenaForm({ item, type, onSave, onClose }) {
 }
 
 // ============ VENDORS ============
-function Vendors({ data, updateData, showToast }) {
+function Vendors({ data, updateData, showToast, user }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -1399,10 +1408,14 @@ function Vendors({ data, updateData, showToast }) {
     setEditing(null);
   };
 
-  const del = (id) => {
-    if (confirm('Delete karna hai?')) {
+  const del = async (id) => {
+    if (confirm('Delete karna hai? (Trash mein jayega, recover kar sakte ho)')) {
+      const item = data.vendors.find(x => x.id === id);
+      if (item && user) {
+        await moveToTrash(user.id, 'vendor', item);
+      }
       updateData(d => ({ ...d, vendors: d.vendors.filter(x => x.id !== id) }));
-      showToast('Deleted');
+      showToast('Moved to trash');
     }
   };
 
@@ -1531,7 +1544,7 @@ function VendorForm({ item, onSave, onClose }) {
 }
 
 // ============ GUESTS ============
-function Guests({ data, updateData, showToast }) {
+function Guests({ data, updateData, showToast, user }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -1557,10 +1570,14 @@ function Guests({ data, updateData, showToast }) {
     setEditing(null);
   };
 
-  const del = (id) => {
-    if (confirm('Delete?')) {
+  const del = async (id) => {
+    if (confirm('Delete karna hai? (Trash mein jayega, recover kar sakte ho)')) {
+      const item = data.guests.find(x => x.id === id);
+      if (item && user) {
+        await moveToTrash(user.id, 'guest', item);
+      }
       updateData(d => ({ ...d, guests: d.guests.filter(x => x.id !== id) }));
-      showToast('Deleted');
+      showToast('Moved to trash');
     }
   };
 
